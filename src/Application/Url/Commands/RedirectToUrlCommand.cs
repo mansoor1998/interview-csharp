@@ -1,6 +1,8 @@
+using System;
 using FluentValidation;
 using HashidsNet;
 using MediatR;
+using UrlShortenerService.Application.Common.Exceptions;
 using UrlShortenerService.Application.Common.Interfaces;
 
 namespace UrlShortenerService.Application.Url.Commands;
@@ -20,7 +22,7 @@ public class RedirectToUrlCommandValidator : AbstractValidator<RedirectToUrlComm
     }
 }
 
-public class RedirectToUrlCommandHandler : IRequestHandler<RedirectToUrlCommand, string>
+public class RedirectToUrlCommandHandler : IRequestHandler<RedirectToUrlCommand, string?>
 {
     private readonly IApplicationDbContext _context;
     private readonly IHashids _hashids;
@@ -31,9 +33,16 @@ public class RedirectToUrlCommandHandler : IRequestHandler<RedirectToUrlCommand,
         _hashids = hashids;
     }
 
-    public async Task<string> Handle(RedirectToUrlCommand request, CancellationToken cancellationToken)
+    public async Task<string?> Handle(RedirectToUrlCommand request, CancellationToken cancellationToken)
     {
-        await Task.CompletedTask;
-        throw new NotImplementedException();
+        var decodedArr = _hashids.DecodeLong(request.Id);
+
+        if (decodedArr.Length == 0)
+        {
+            throw new ZeroLengthException("Array cannot have length 0");
+        }
+
+        var url = _context.Urls.FirstOrDefault(url => url.Id == decodedArr[0]);
+        return url?.OriginalUrl ?? null;
     }
 }

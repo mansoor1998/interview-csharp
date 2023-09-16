@@ -47,6 +47,14 @@ public class ApplicationDbContextInitialiser
     {
         // Default data
         // Seed, if necessary
-        await Task.CompletedTask;
+        // await Task.CompletedTask;
+        var result = await _context.Urls.FirstOrDefaultAsync(x => x.OriginalUrl == "https://www.google.com");
+
+        if(result != null) return;
+
+        _ = _context.Urls.Add(new() {
+            OriginalUrl = "https://www.google.com"
+        });
+        _ = await _context.SaveChangesAsync();
     }
 }
